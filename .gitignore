@@ -1,0 +1,17 @@
+# dependecies can be retreived via ```npm install``` as long ```package.json``` is present
+node_modules/
+# can be retreived by running tests
+coverage/
+
+.vscode*
+
+.npmrc*
+
+# output of build
+dist
+lib
+
+# cardanocli temp
+.cardanocli_pluts_tmp
+
+.env
