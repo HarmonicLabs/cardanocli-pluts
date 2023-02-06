@@ -3,7 +3,8 @@ import ObjectUtils from "../../utils/ObjectUtils"
 export interface ICliCmdConfig {
     readonly network: "mainnet" | `testnet ${number}`
     readonly cliPath: string,
-    readonly tmpDirPath: string
+    readonly tmpDirPath: string,
+    readonly socketPath: string
 }
 
 export class CliCmd

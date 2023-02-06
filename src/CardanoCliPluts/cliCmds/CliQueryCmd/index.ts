@@ -13,6 +13,8 @@ export type QueryByTxOutRefFilter = (TxOutRef | `${string}#${number}`);
 export type QueryByAddressFilter = (Address | AddressStr);
 
 export type QueryUTxOArgs = {
+    address: QueryByAddressFilter
+} | {
     addresses: QueryByAddressFilter[]
 } | {
     byTxOutRef: QueryByTxOutRefFilter[]
@@ -47,7 +49,8 @@ export class CliQueryCmd extends CliCmd
             `${this.cfg.cliPath} query protocol-parameters \
             --${this.cfg.network} \
             --out-file ${ppPath}
-            `
+            `,
+            { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
         );
 
         await waitForFileExists( ppPath, 5000 );
@@ -71,7 +74,8 @@ export class CliQueryCmd extends CliCmd
                     `${this.cfg.cliPath} query utxo \
                     --${this.cfg.network} \
                     --whole-utxo
-                    `
+                    `,
+                    { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
                 )).stdout,
                 Address.fake
             );
@@ -91,7 +95,8 @@ export class CliQueryCmd extends CliCmd
                                     byRef.toString() 
                                 )
                             ).join(' ')
-                        } `
+                        } `,
+                        { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
                     )
                 ).stdout,
                 Address.fake
@@ -111,13 +116,27 @@ export class CliQueryCmd extends CliCmd
                                 byAddr : 
                                 byAddr.toString()
                             }
-                            `
+                            `,
+                            { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
                         )).stdout,
                         typeof byAddr === "string" ? Address.fromString( byAddr ) : byAddr
                     )
                 )
             ))
             .reduce( (accum, utxos) => accum.concat( utxos ) );
+        }
+        if( ObjectUtils.hasOwn( args, "address" ) )
+        {
+            return parseUtxoOutput(
+                (await exec(
+                    `${this.cfg.cliPath} query utxo \
+                    --${this.cfg.network} \
+                    --address ${args.address.toString()}
+                    `,
+                    { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
+                )).stdout,
+                typeof args.address === "string" ? Address.fromString( args.address ) : args.address
+            )
         }
 
         throw new CardanoCliPlutsBaseError(

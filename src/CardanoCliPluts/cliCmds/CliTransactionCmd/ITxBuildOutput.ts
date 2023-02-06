@@ -25,7 +25,7 @@ export function toOutputBuildOptions(
     }: ICliTxBuildOut): string
     {
         let result = " --tx-out " +
-        address.toString() + ' ' +
+        address.toString() +
         valueToString( value );
 
         if( datum !== undefined )
@@ -80,7 +80,7 @@ export function valueToString( value: Value ): string
         Object.keys( assets )
         .map( assetNameAscii =>
 
-            policy === "" ? `${(assets as any)[assetNameAscii].toString()} lovelace` :
+            policy === "" ? `+${(assets as any)[assetNameAscii].toString()}` :
             
             (assets as any)[assetNameAscii].toString() + 
             `${policy.asString}.` + 

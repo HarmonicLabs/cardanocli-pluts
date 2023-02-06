@@ -1,10 +1,11 @@
-import { Network, NetworkT } from "@harmoniclabs/plu-ts"
 import { CardanoCliPlutsBaseError } from "../errors/ CardanoCliPlutsBaseError"
-import { execSync } from "node:child_process"
 import ObjectUtils from "../utils/ObjectUtils"
 import { CardanoEra, isCardanoEra } from "../types/CardanoEra"
 import { CliAddressCmd } from "./cliCmds/CliAddressCmd"
 import { existsSync, mkdirSync } from "node:fs"
+import { CliTransactionCmd } from "./cliCmds/CliTransactionCmd"
+import { CliQueryCmd } from "./cliCmds/CliQueryCmd"
+import { CliUtils } from "./cliCmds/CliUtils"
 
 export interface CardanoCliPlutsConfig {
     network: "mainnet" | `testnet ${number}`,
@@ -17,6 +18,9 @@ export interface CardanoCliPlutsConfig {
 export class CardanoCliPluts
 {
     readonly address!: CliAddressCmd
+    readonly transaction!: CliTransactionCmd
+    readonly query!: CliQueryCmd
+    readonly utils!: CliUtils
 
     constructor({
         network: _network,
@@ -55,7 +59,7 @@ export class CardanoCliPluts
                 "invalid testnet-magic: " + n.toString()
             );
 
-            network = ("testnet " + n.toString()) as any;
+            network = ("testnet-magic " + n.toString()) as any;
         }
 
         const era = _era !== undefined && isCardanoEra( _era ) ? _era : "babbage"
@@ -79,13 +83,29 @@ export class CardanoCliPluts
         const cmdCfg = Object.freeze({
             network,
             cliPath,
-            tmpDirPath
+            tmpDirPath,
+            socketPath: socketPath ?? process.env.CARDANO_NODE_SOCKET_PATH ?? "."
         });
 
         ObjectUtils.defineReadOnlyProperty(
             this, "address",
             new CliAddressCmd(cmdCfg)
-        )
+        );
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "query",
+            new CliQueryCmd(cmdCfg)
+        );
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "transaction",
+            new CliTransactionCmd(cmdCfg)
+        );
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "utils",
+            new CliUtils(cmdCfg)
+        );
 
     }
 }

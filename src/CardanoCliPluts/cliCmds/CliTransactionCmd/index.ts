@@ -1,4 +1,4 @@
-import { Address, AddressStr, CanBeUInteger, Certificate, Hash28, ITxOut, ProtocolUpdateProposal, PubKeyHash, Script, Tx, TxBody, TxMetadata, forceBigUInt } from "@harmoniclabs/plu-ts";
+import { Address, AddressStr, CanBeUInteger, Certificate, Hash28, ITxOut, PrivateKey, ProtocolUpdateProposal, PubKeyHash, Script, Tx, TxBody, TxMetadata, forceBigUInt } from "@harmoniclabs/plu-ts";
 import { OrPath, WithPath, withPath } from "../../../utils/path/withPath";
 import { CliCmd, ICliCmdConfig } from "../CliCmd";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -12,10 +12,10 @@ import { ICliTxBuildCert } from "./ICliTxBuildCert";
 import { ICliTxBuildWithdrawal } from "./ICliTxBuildWithdrawal";
 import { forceData } from "../../../utils/CanBeData";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
-import { execSync } from "child_process";
 import randId from "../../../utils/randId";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
+import { getPath } from "../../../utils/path/getPath";
 
 
 export interface CliTransactionCmdBuild
@@ -164,6 +164,11 @@ export interface CliTransactionCmdSubmit
     tx: OrPath<Tx>
 }
 
+export interface CliTransactionCmdSign {
+    tx: OrPath<Tx>,
+    privateKey: OrPath<PrivateKey>
+}
+
 export class CliTransactionCmd extends CliCmd
 {
     constructor( cfg: ICliCmdConfig )
@@ -193,7 +198,60 @@ export class CliTransactionCmd extends CliCmd
             `${this.cfg.cliPath} transaction submit \
             --${this.cfg.network} \
             --tx-file ${(tx as any).path}
-            `);
+            `,
+            { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
+        );
+    }
+
+    async sign({
+        tx,
+        privateKey
+    }: CliTransactionCmdSign)
+    : Promise<WithPath<Tx>>
+    {
+        const txPath: string = await getPath(
+            Tx,
+            tx,
+            {
+                postfix: "tx",
+                tmpDirPath: this.cfg.tmpDirPath
+            }
+        );
+        const skeyPath: string = await getPath(
+            PrivateKey,
+            privateKey,
+            {
+                postfix: "skey",
+                tmpDirPath: this.cfg.tmpDirPath
+            }
+        );
+
+        let outPath: string;
+        do {
+            outPath = `${this.cfg.tmpDirPath}/${randId()}_tx.json`;
+        } while( existsSync(outPath) )
+
+        await exec(
+            `${this.cfg.cliPath} transaction sign \
+            --${this.cfg.network} \
+            --tx-file ${txPath} \
+            --signing-key-file ${skeyPath} \
+            --out-file ${outPath}
+            `,
+            { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
+        );
+
+        await waitForFileExists( outPath );
+
+        return withPath(
+            outPath,
+            Tx.fromCbor(
+                JSON.parse(
+                    readFileSync( outPath )
+                    .toString()
+                ).cborHex
+            )
+        )
     }
 
     async build({
@@ -212,10 +270,11 @@ export class CliTransactionCmd extends CliCmd
         metadata,
         protocolUpdateProposal
     }: CliTransactionCmdBuild)
-    : Promise<WithPath<TxBody>>
+    : Promise<WithPath<Tx>>
     {
         let cmd =
-            `${this.cfg.cliPath} transaction submit \
+            `${this.cfg.cliPath} transaction build \
+            --cddl-format \
             --${this.cfg.network} \
             ${inputs  .map( toInputBuildOptions ( this.cfg ) ).join(' ')} `;
 
@@ -248,22 +307,24 @@ export class CliTransactionCmd extends CliCmd
         let outPath: string;
         do {
             outPath = `${this.cfg.tmpDirPath}/${randId()}_tx.json`
-        } while ( execSync( outPath ) );
+        } while ( existsSync( outPath ) );
 
         cmd += ` --out-file ${outPath} `;
-
-        await exec(cmd);
+    
+        await exec(cmd, { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } });
 
         await waitForFileExists( outPath, 5000 );
 
+        const cborHex = JSON.parse(
+            readFileSync( outPath )
+            .toString()
+        ).cborHex;
+
+        console.log( cborHex );
+
         return withPath(
             outPath,
-            TxBody.fromCbor(
-                JSON.parse(
-                    readFileSync( outPath )
-                    .toString()
-                ).cborHex
-            )
+            Tx.fromCbor( cborHex )
         );
     }
 

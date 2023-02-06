@@ -13,20 +13,20 @@ import {
 export function parseUtxoOutput( utxoOuput: string, addr: Address ): UTxO[]
 {
     const lines = utxoOuput.split('\n').slice(2);
-    const len = lines.length;
+    const len = lines.length - 1; // last line is empty
     const result: UTxO[] = new Array( len );
 
     for( let n = 0; n < len; n++ )
     {
         const values = lines[n].split(' ').filter( str => str !== '' );
 
-        const [ id, index ] = values[0].split('#');
+        const [ id, index, lovelaces ] = values;
 
-        let amount: Value = Value.lovelaces( BigInt( values[1] ) );
+        let amount: Value = Value.lovelaces( BigInt( lovelaces ) );
         let datum: Hash32 | Data | undefined = undefined;
         let refScript: Script<ScriptType.PlutusV2> | undefined = undefined;
         
-        for( let i = 3; i < len; )
+        for( let i = 4; i < len; )
         {
             if( values[i++] !== "+" ) break;
 

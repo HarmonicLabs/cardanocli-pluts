@@ -13,7 +13,7 @@ export function forceUTxORefString( ref: CanBeUTxORef ): `${string}#${number}`
 
         if(!(
             id.length === 64 &&
-            Array.from( id.toLowerCase() ).every( "abcdef0123456789".includes ) &&
+            Array.from( id.toLowerCase() ).every( ch => "abcdef0123456789".includes(ch) ) &&
             index === Math.round( Math.abs( index ) )
         ))
         throw new CardanoCliPlutsBaseError(
