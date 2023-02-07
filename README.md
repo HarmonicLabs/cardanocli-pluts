@@ -25,6 +25,7 @@
 
 ```ts
 import { CardanoCliPluts } from "@harmoniclabs/cardanocli-pluts"
+import { Value } from "@harmoniclabs/plu-ts"
 
 const cli = new CardanocliJs({
     network: "testnet 42"
