@@ -19,6 +19,7 @@
 
 - `cardano-node >= 1.29.0`
 - `node.js >= 12.19.0`
+- `plu-ts >= 0.2.0`
 
 
 ## Getting started
