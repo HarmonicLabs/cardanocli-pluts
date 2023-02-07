@@ -6,7 +6,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { exec } from "../../utils/node_promises";
 import { PrivateKey, PublicKey, PubKeyHash, Script, Address } from "@harmoniclabs/plu-ts";
 import ObjectUtils from "../../utils/ObjectUtils";
-import { extractIdFromPath } from "../../utils/extractIdFromPath";
+import { extractIdFromPath } from "../../utils/extractFromPath";
 import { ensurePath } from "../../utils/path/ensurePath";
 
 

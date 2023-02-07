@@ -6,12 +6,14 @@ import { existsSync, mkdirSync } from "node:fs"
 import { CliTransactionCmd } from "./cliCmds/CliTransactionCmd"
 import { CliQueryCmd } from "./cliCmds/CliQueryCmd"
 import { CliUtils } from "./cliCmds/CliUtils"
+import { ProtocolParamters } from "@harmoniclabs/plu-ts"
 
 export interface CardanoCliPlutsConfig {
     network: "mainnet" | `testnet ${number}`,
     socketPath?: string,
     workingDirectory?: string,
     cardanoCliPath?: string,
+    protocolParamsPath?: string,
     era?: CardanoEra
 }
 
@@ -27,6 +29,7 @@ export class CardanoCliPluts
         socketPath,
         workingDirectory,
         cardanoCliPath,
+        protocolParamsPath,
         era: _era
     }: CardanoCliPlutsConfig)
     {
@@ -80,21 +83,40 @@ export class CardanoCliPluts
 
         const cliPath = cardanoCliPath === undefined ? "cardano-cli" : cardanoCliPath;
 
+        // lazy protocol params, someone might not need them
+        let _ppCache: string = protocolParamsPath as any; 
+        const getProtocolParamsPath = async () => {
+            if( typeof _ppCache === "string" ) return _ppCache;
+
+            _ppCache = (
+                await new CliQueryCmd({
+                    network,
+                    cliPath,
+                    tmpDirPath,
+                    socketPath: socketPath ?? process.env.CARDANO_NODE_SOCKET_PATH ?? ".",
+                    getProtocolParamsPath: (() => {}) as any
+                }).protocolParameters()
+            ).path;
+
+            return _ppCache;
+        }
+
         const cmdCfg = Object.freeze({
             network,
             cliPath,
             tmpDirPath,
-            socketPath: socketPath ?? process.env.CARDANO_NODE_SOCKET_PATH ?? "."
+            socketPath: socketPath ?? process.env.CARDANO_NODE_SOCKET_PATH ?? ".",
+            getProtocolParamsPath
         });
-
-        ObjectUtils.defineReadOnlyProperty(
-            this, "address",
-            new CliAddressCmd(cmdCfg)
-        );
 
         ObjectUtils.defineReadOnlyProperty(
             this, "query",
             new CliQueryCmd(cmdCfg)
+        );
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "address",
+            new CliAddressCmd(cmdCfg)
         );
 
         ObjectUtils.defineReadOnlyProperty(

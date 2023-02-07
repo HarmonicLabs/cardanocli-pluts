@@ -1,9 +1,10 @@
-import { Address, AddressStr, Hash32, Script, Value } from "@harmoniclabs/plu-ts"
+import { Address, AddressStr, Hash32, Script, Value, dataToCbor } from "@harmoniclabs/plu-ts"
 import { CanBeData, forceData } from "../../../utils/CanBeData"
 import { ICliCmdConfig } from "../CliCmd"
 import { OrPath } from "../../../utils/path/withPath"
 import ObjectUtils from "../../../utils/ObjectUtils"
 import { ensurePath } from "../../../utils/path/ensurePath"
+import { writeCborFile } from "./tx_build_utils"
 
 export interface ICliTxBuildOut {
     address: Address | AddressStr,
@@ -15,14 +16,14 @@ export interface ICliTxBuildOut {
 
 export function toOutputBuildOptions(
     cfg: Readonly<ICliCmdConfig>
-): (inputOptions: ICliTxBuildOut) => string
+): (inputOptions: ICliTxBuildOut) => Promise<string>
 {
-    return function ({
+    return async function ({
         address,
         value,
         datum,
         refScript
-    }: ICliTxBuildOut): string
+    }: ICliTxBuildOut): Promise<string>
     {
         let result = " --tx-out " +
         address.toString() +
@@ -34,10 +35,11 @@ export function toOutputBuildOptions(
             result += ` --tx-out-datum-hash ${datum.asString} `;
             else
             {
-                result += ` --tx-out-inline-datum-value ${
-                    JSON.stringify(
-                        forceData( datum )
-                        .toJson()
+                result += ` --tx-out-inline-datum-cbor-file ${
+                    await writeCborFile(
+                        dataToCbor( forceData( datum ) ),
+                        cfg.tmpDirPath,
+                        "data"
                     )
                 } `
             }
@@ -47,7 +49,7 @@ export function toOutputBuildOptions(
         {
             if( !ObjectUtils.hasOwn( refScript, "path" ) )
             {
-                ensurePath(
+                await ensurePath(
                     Script,
                     refScript,
                     {
@@ -73,22 +75,36 @@ export function toReturnCollateralOpt( collRet: {
     return collRet === undefined ? "" : ` --tx-out-return-collateral ${collRet.address.toString()} ${valueToString(collRet.value)} `;
 }
 
-export function valueToString( value: Value ): string
+export function valueToString( value: Value, includeLovelaces = true ): string
 {
-    return value.map.map( ({ policy, assets }) =>
+    let valueStr = "";
+    const valueMap = value.map;
 
-        Object.keys( assets )
-        .map( assetNameAscii =>
+    if( includeLovelaces )
+    valueStr +=`+${value.lovelaces.toString()}`;
 
-            policy === "" ? `+${(assets as any)[assetNameAscii].toString()}` :
-            
-            (assets as any)[assetNameAscii].toString() + 
-            `${policy.asString}.` + 
-            Buffer.from( assetNameAscii, "ascii" )
-            .toString("hex")
-            
-        )
-        .join(" + ")
+    if( Value.isAdaOnly( value ) ) return valueStr;
 
-    ).join(" + ");
+    valueStr += includeLovelaces ? '+"' : '"' ;
+
+    for(const { policy, assets } of valueMap)
+    {
+        if( policy === "" ) continue;
+
+        for(const assetNameAscii in assets)
+        {
+            valueStr += `${
+                value.get(policy,assetNameAscii)
+                .toString()
+            } ${
+                policy.asString
+            }.${
+                Buffer.from( assetNameAscii, "ascii" ).toString("hex")
+            }+`;
+        }
+    }
+
+    valueStr = valueStr.slice( 0, valueStr.length - 1 ) + '"';
+
+    return valueStr;
 }

@@ -1,163 +1,22 @@
-import { Address, AddressStr, CanBeUInteger, Certificate, Hash28, ITxOut, PrivateKey, ProtocolUpdateProposal, PubKeyHash, Script, Tx, TxBody, TxMetadata, forceBigUInt } from "@harmoniclabs/plu-ts";
+import { PrivateKey, Tx, forceBigUInt } from "@harmoniclabs/plu-ts";
 import { OrPath, WithPath, withPath } from "../../../utils/path/withPath";
 import { CliCmd, ICliCmdConfig } from "../CliCmd";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { exec } from "../../../utils/node_promises";
 import { ensurePath } from "../../../utils/path/ensurePath";
-import { ICliTxBuildIn, toInputBuildOptions } from "./ICliTxBuildIn";
-import { ICliTxBuildOut, toOutputBuildOptions, toReturnCollateralOpt, valueToString } from "./ITxBuildOutput";
-import { CanBeUTxORef, forceUTxORefString } from "./CanBeUTxORef";
-import { ICliTxBuildMint } from "./ICliTxBuildMint";
-import { ICliTxBuildCert } from "./ICliTxBuildCert";
-import { ICliTxBuildWithdrawal } from "./ICliTxBuildWithdrawal";
-import { forceData } from "../../../utils/CanBeData";
-import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
+import { toInputBuildOptions } from "./ICliTxBuildIn";
+import { toOutputBuildOptions, toReturnCollateralOpt } from "./ITxBuildOutput";
 import randId from "../../../utils/randId";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
 import { existsSync, readFileSync } from "fs";
 import { getPath } from "../../../utils/path/getPath";
+import { isCardanoEra } from "../../../types/CardanoEra";
+import { CliTransactionCmdBuild, needsPlutusScripts, includeUtxosRefWith, requiredSignersToOpts, mintToOpt, certToOpt, withdrawToOpt, writeCborFile } from "./tx_build_utils";
+import { extractIdFromPath } from "../../../utils/extractFromPath";
+import { unlink, rename } from "node:fs/promises";
+import { Buffer } from "buffer";
+import { sha256 } from "../../../utils/sha256";
 
-
-export interface CliTransactionCmdBuild
-{
-    inputs: [ ICliTxBuildIn, ...ICliTxBuildIn[] ],
-    outputs?: ICliTxBuildOut[],
-    changeAddress?: Address | AddressStr,
-    readonlyRefInputs?: CanBeUTxORef[],
-    requiredSigners?: OrPath<PubKeyHash | string>[],
-    collaterals?: CanBeUTxORef[],
-    collateralReturn?: ICliTxBuildOut,
-    mints?: ICliTxBuildMint[],
-    invalidBefore?: CanBeUInteger,
-    invalidAfter?: CanBeUInteger,
-    certificates?: ICliTxBuildCert[],
-    withdrawals?: ICliTxBuildWithdrawal[],
-    metadata?: OrPath<object | TxMetadata>,
-    protocolUpdateProposal?: OrPath<ProtocolUpdateProposal>
-}
-
-function includeUtxosRefWith(
-    option: string,
-    utxosRef: CanBeUTxORef[] | undefined
-): string
-{
-    return utxosRef
-        ?.map( ref => 
-            ` ${option} ${forceUTxORefString(ref)} `
-        )
-        .join(' ') ?? ""
-}
-
-function requiredSignersToOpts( 
-    requiredSigners: OrPath<PubKeyHash | string>[] | undefined
-): string
-{
-    return requiredSigners?.map( sig => {
-
-        if( sig instanceof Hash28 || typeof sig === "string" )
-        return ` --required-signer-hash ${sig.toString()} `;
-        return ` --required-signer ${sig.path} `;
-    })
-    .join(' ') ?? ""
-}
-
-function mintToOpt({
-    value,
-    script
-}: ICliTxBuildMint ): string
-{
-    let opt = ` --mint ${valueToString(value)} `;
-
-    if( ObjectUtils.hasOwn( script, "inline" ) )
-    {
-        if( ObjectUtils.hasOwn( script.inline, "path" ) )
-        opt += ` --mint-script-file ${script.inline.path} ` +
-            ` --mint-redeemer-value ${
-                JSON.stringify(
-                    forceData( script.redeemer )
-                    .toJson()
-                )
-            } `;
-    }
-    else if( ObjectUtils.hasOwn( script, "ref" ) )
-    {
-        opt += ` --mint-tx-in-reference ${forceUTxORefString( script.ref )} ` +
-            " --mint-plutus-script-v2 " +
-            ` --mint-reference-tx-in-redeemer-value ${
-                JSON.stringify(
-                    forceData( script.redeemer )
-                    .toJson()
-                )
-            } ` + 
-            ` --policy-id ${script.policyId.toString()} `
-    }
-
-    return opt;
-}
-
-function certToOpt({
-    cert,
-    script
-}: ICliTxBuildCert ): string
-{
-    let opt = "";
-
-    if( !ObjectUtils.hasOwn( cert, "path" ) )
-    {
-        ensurePath(
-            Certificate as any,
-            cert,
-            {
-                postfix: "cert",
-                tmpDirPath: ""
-            }
-        )
-    }
-
-    opt += ` --certificate-file ${(cert as any).path} `;
-
-    if( script === undefined ) return opt;
-
-    if( ObjectUtils.hasOwn( script, "ref" ) )
-    {
-        opt += ` --certificate-tx-in-reference ${forceUTxORefString(script.ref)} ` + 
-            " --certificate-plutus-script-v2 " +
-            ` --certificate-reference-tx-in-redeemer-value ${
-                JSON.stringify(
-                    forceData( script.redeemer )
-                    .toJson()
-                )
-            } `;
-    }
-    else if( ObjectUtils.hasOwn( script, "inline" ) )
-    {
-        if( !ObjectUtils.hasOwn( script.inline, "path" ) )
-        {
-            ensurePath(
-                Script,
-                script.inline,
-                {
-                    postfix: "script",
-                    tmpDirPath: ""
-                }
-            )
-        }
-
-        opt += ` --certificate-script-file ${(script.inline as any).path} ` +
-        ` --certificate-redeemer-value ${
-            JSON.stringify(
-                forceData( script.redeemer )
-                .toJson()
-            )
-        } `;
-
-    }
-    else throw new CardanoCliPlutsBaseError(
-        "invald certificate script"
-    )
-
-    return opt;
-}
 
 export interface CliTransactionCmdSubmit
 {
@@ -213,7 +72,7 @@ export class CliTransactionCmd extends CliCmd
             Tx,
             tx,
             {
-                postfix: "tx",
+                postfix: "tx_signed",
                 tmpDirPath: this.cfg.tmpDirPath
             }
         );
@@ -226,10 +85,11 @@ export class CliTransactionCmd extends CliCmd
             }
         );
 
-        let outPath: string;
-        do {
-            outPath = `${this.cfg.tmpDirPath}/${randId()}_tx.json`;
-        } while( existsSync(outPath) )
+        let outPath: string = `${this.cfg.tmpDirPath}/${extractIdFromPath( txPath, randId )}_tx_signed.json`;
+
+        // can't extract file id from path and randId returned an exsisting id
+        while( existsSync( outPath ) )
+        outPath = `${this.cfg.tmpDirPath}/${randId()}_tx_signed.json`;
 
         await exec(
             `${this.cfg.cliPath} transaction sign \
@@ -243,15 +103,31 @@ export class CliTransactionCmd extends CliCmd
 
         await waitForFileExists( outPath );
 
+        const txCbor = Buffer.from(
+            JSON.parse(
+                readFileSync( outPath )
+                .toString()
+            ).cborHex,
+            "hex"
+        );
+
+        // the hash is different from the tx hash
+        // since it includes also non-body fields
+        // (on top of not being blake2b_256)
+        const path = `${this.cfg.tmpDirPath}/${sha256(txCbor)}_tx_signed.json`;
+
+        if( !existsSync(path) )
+        await rename( outPath, path );
+
+        if( existsSync( outPath ) )
+        unlink( outPath );
+
+        await waitForFileExists( path );
+
         return withPath(
-            outPath,
-            Tx.fromCbor(
-                JSON.parse(
-                    readFileSync( outPath )
-                    .toString()
-                ).cborHex
-            )
-        )
+            path,
+            Tx.fromCbor( txCbor )
+        );
     }
 
     async build({
@@ -268,18 +144,30 @@ export class CliTransactionCmd extends CliCmd
         certificates,
         withdrawals,
         metadata,
-        protocolUpdateProposal
+        protocolUpdateProposalPath,
+        era
     }: CliTransactionCmdBuild)
     : Promise<WithPath<Tx>>
     {
         let cmd =
             `${this.cfg.cliPath} transaction build \
             --cddl-format \
+            --${era !== undefined && isCardanoEra(era) ? era : "babbage"}-era \
             --${this.cfg.network} \
-            ${inputs  .map( toInputBuildOptions ( this.cfg ) ).join(' ')} `;
+            ${inputs.map( toInputBuildOptions ( this.cfg ) ).join(' ')} `;
+
+        if(
+            needsPlutusScripts(
+                inputs,
+                mints,
+                certificates,
+                withdrawals
+            )
+        )
+        cmd += ` --protocol-params-file ${await this.cfg.getProtocolParamsPath()} `;
 
         if( outputs !== undefined )
-        cmd += outputs.map( toOutputBuildOptions( this.cfg ) ).join(' ');
+        cmd += (await Promise.all(outputs.map( toOutputBuildOptions( this.cfg ) ))).join(' ');
 
         if( changeAddress !== undefined )
         cmd += ` --change-address ${changeAddress.toString()} `;
@@ -298,11 +186,53 @@ export class CliTransactionCmd extends CliCmd
         cmd += ` --invalid-hereafter ${forceBigUInt( invalidAfter ).toString()} `;
 
         if( mints !== undefined )
-        cmd += mints.map( mintToOpt ).join(' ');
+        cmd += (await Promise.all(
+                mints.map(
+                    mintToOpt({
+                        postfix: "minting_policy",
+                        tmpDirPath: this.cfg.tmpDirPath
+                    })
+                )
+            )
+        ).join(' ');
 
         if( certificates !== undefined )
-        cmd += certificates.map( certToOpt ).join(' ');
+        cmd += ' ' + (
+            await Promise.all(
+                certificates.map(
+                    certToOpt({
+                        postfix: "certificate_validator",
+                        tmpDirPath: this.cfg.tmpDirPath
+                    })
+                )
+            )
+        ).join(' ') + ' ';
 
+        if( withdrawals !== undefined )
+        cmd += ' ' + (
+            await Promise.all(
+                withdrawals.map(
+                    withdrawToOpt({
+                        postfix: "stake_validator",
+                        tmpDirPath: this.cfg.tmpDirPath
+                    })
+                )
+            )
+        ).join(' ') + ' ';
+
+        if( metadata !== undefined )
+        cmd += ` --metadata-cbor-file ${
+            ObjectUtils.hasOwn( metadata, "path" ) ?
+            metadata.path :
+            await writeCborFile(
+                metadata.toCbor().asBytes,
+                this.cfg.tmpDirPath,
+                "metadata"
+            )
+        } `;
+
+        if( protocolUpdateProposalPath !== undefined )
+        cmd += ` --update-proposal-file ${protocolUpdateProposalPath} `
 
         let outPath: string;
         do {
@@ -315,16 +245,30 @@ export class CliTransactionCmd extends CliCmd
 
         await waitForFileExists( outPath, 5000 );
 
-        const cborHex = JSON.parse(
-            readFileSync( outPath )
-            .toString()
-        ).cborHex;
+        const txCbor = Buffer.from(
+            JSON.parse(
+                readFileSync( outPath )
+                .toString()
+            ).cborHex,
+            "hex"
+        );
 
-        console.log( cborHex );
+        // the hash is different from the tx hash
+        // since it includes also non-body fields
+        // (on top of not being blake2b_256)
+        const path = `${this.cfg.tmpDirPath}/${sha256(txCbor)}_tx.json`;
+
+        if( !existsSync(path) )
+        await rename( outPath, path );
+
+        if( existsSync( outPath ) )
+        unlink( outPath );
+
+        await waitForFileExists( path );
 
         return withPath(
-            outPath,
-            Tx.fromCbor( cborHex )
+            path,
+            Tx.fromCbor( txCbor )
         );
     }
 

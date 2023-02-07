@@ -4,10 +4,12 @@ import { WithPath, withPath } from "../../../utils/path/withPath";
 import randId from "../../../utils/randId";
 import { exec } from "../../../utils/node_promises";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFile, writeFileSync } from "node:fs";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { parseUtxoOutput } from "./parseUtxoOutput";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
+import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 export type QueryByTxOutRefFilter = (TxOutRef | `${string}#${number}`);
 export type QueryByAddressFilter = (Address | AddressStr);
@@ -35,31 +37,44 @@ export class CliQueryCmd extends CliCmd
         super( cfg );
     }
 
+    protocolParametersSync(): ProtocolParamters
+    {
+        return JSON.parse(
+            execSync(
+                `${this.cfg.cliPath} query protocol-parameters \
+                --${this.cfg.network} \
+                `,
+                { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
+            ).toString()
+        );
+    }
+
     async protocolParameters(): Promise<WithPath<ProtocolParamters>>
     {
-        let ppId: string;
-        let ppPath: string;
-        
-        do {
-            ppId = randId();
-            ppPath = `${this.cfg.tmpDirPath}/${ppId}_protocol_params.json`;
-        } while( existsSync(ppPath)  )
 
-        await exec(
+        const pps = execSync(
             `${this.cfg.cliPath} query protocol-parameters \
             --${this.cfg.network} \
-            --out-file ${ppPath}
             `,
             { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
         );
 
-        await waitForFileExists( ppPath, 5000 );
+        const ppsStr = pps.toString("utf-8");
 
-        const pp = JSON.parse(
-            readFileSync( ppPath ).toString()
-        );
+        const ppPath = `${this.cfg.tmpDirPath}/${
+            createHash( "sha256" )
+            .update( pps )
+            .digest("hex")
+        }_protocol_params.json`;
 
-        return withPath( ppPath, pp );
+        if( !existsSync(ppPath) )
+        {
+            writeFile( ppPath, ppsStr, () => {} );
+    
+            await waitForFileExists( ppPath, 5000 );
+        }
+
+        return withPath( ppPath, JSON.parse( ppsStr ) );
     }
 
     async utxo( args: QueryUTxOArgs): Promise<UTxO[]>

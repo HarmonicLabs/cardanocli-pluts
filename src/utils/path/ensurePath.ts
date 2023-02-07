@@ -1,11 +1,12 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import ObjectUtils from "../ObjectUtils";
-import { extractIdFromPath } from "../extractIdFromPath";
 import randId from "../randId";
 import { waitForFileExists } from "../waitForFileExists";
 import { OrPath, WithPath, withPath } from "./withPath";
 import { CborString } from "@harmoniclabs/plu-ts/dist/cbor/CborString";
 import { CardanoCliPlutsBaseError } from "../../errors/ CardanoCliPlutsBaseError";
+import { Script } from "@harmoniclabs/plu-ts";
+import { Hash, createHash } from "crypto";
 
 export interface PlutsClassToCbor {
     toCbor(): CborString
@@ -33,12 +34,19 @@ export async function ensurePath<T extends PlutsClassToCbor>(
     }: EnsurePathDetails
 ): Promise<WithPath<T>>
 {
-    let path: string;
-
+    if( ctor as any === Script ) return ensurePathScript(
+        maybePath as any,
+        {
+            postfix,
+            tmpDirPath
+        }
+    ) as any;
+    
     // if a path is present
     if( ObjectUtils.hasOwn( maybePath, "path" ) )
     {
         // and the `OrPath` argument is not an instace of the class
+        // hence only the path is present
         if( !(maybePath instanceof ctor) )
         {
             // parse the cbor and construct an instance
@@ -52,6 +60,9 @@ export async function ensurePath<T extends PlutsClassToCbor>(
                 )
             );
         }
+
+        // everything ok
+        return maybePath;
     }
 
     // if a path is NOT present
@@ -60,24 +71,88 @@ export async function ensurePath<T extends PlutsClassToCbor>(
     throw new CardanoCliPlutsBaseError(
         "invalid 'maybePath' argument while calling 'ensurePath'"
     );
+
+    const cborStr = maybePath.toCbor() ;
+
+    const path = `${tmpDirPath}/${
+        createHash( "sha256" )
+        .update( cborStr.asBytes )
+        .digest("hex")
+    }_${postfix}.json`;
+
+    if( !existsSync(path) )
+    {
+        writeFileSync(
+            path,
+            JSON.stringify({
+                "type": jsonType ?? "",
+                "description": "",
+                "cborHex": cborStr.asString
+            })
+        );
     
-    let id: string;
+        await waitForFileExists( path );
+    }
 
-    do {
-        id = randId();
-        path = `${tmpDirPath ?? "./.cardanocli_pluts_tmp"}/${id}_${postfix}.json`;
-    } while( existsSync(path) );
-
-    writeFileSync(
+    return withPath(
         path,
-        JSON.stringify({
-            "type": jsonType ?? "",
-            "description": "",
-            "cborHex": maybePath.toCbor().asString
-        })
+        maybePath,
+        tmpDirPath
     );
+}
 
-    await waitForFileExists( path );
+export async function ensurePathScript( 
+    maybePath: OrPath<Script>,
+    {
+        postfix,
+        tmpDirPath
+    }: EnsurePathDetails
+): Promise<WithPath<Script>>
+{
+
+    // if a path is present
+    if( ObjectUtils.hasOwn( maybePath, "path" ) )
+    {
+        // and the `OrPath` argument is not an instace of the class
+        // hence only the path is present
+        if( !(maybePath instanceof Script) )
+        {
+            // parse the cbor and construct an instance
+            return withPath(
+                maybePath.path,
+                Script.fromJson(
+                    JSON.parse(
+                        readFileSync( maybePath.path )
+                        .toString("utf8")
+                    )
+                )
+            );
+        }
+
+        // everything ok
+        return maybePath;
+    }
+
+    // if a path is NOT present
+
+    if( !(maybePath instanceof Script) )
+    throw new CardanoCliPlutsBaseError(
+        "invalid 'maybePath' argument while calling 'ensurePathScript'"
+    );
+    
+    const path = `${tmpDirPath}/${maybePath.hash.asString}_${postfix}.json`;
+
+    if( !existsSync(path) )
+    {
+        writeFileSync(
+            path,
+            JSON.stringify(
+                maybePath.toJson()
+            )
+        );
+    
+        await waitForFileExists( path );
+    }
 
     return withPath(
         path,

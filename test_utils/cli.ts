@@ -5,4 +5,5 @@ config();
 
 export const cli = new CardanoCliPluts({
     network: "testnet 42",
+    socketPath: process.env.SOCKET_PATH
 });
