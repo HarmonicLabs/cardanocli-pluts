@@ -6,7 +6,6 @@ import { existsSync, mkdirSync } from "node:fs"
 import { CliTransactionCmd } from "./cliCmds/CliTransactionCmd"
 import { CliQueryCmd } from "./cliCmds/CliQueryCmd"
 import { CliUtils } from "./cliCmds/CliUtils"
-import { ProtocolParamters } from "@harmoniclabs/plu-ts"
 
 export interface CardanoCliPlutsConfig {
     network: "mainnet" | `testnet ${number}`,

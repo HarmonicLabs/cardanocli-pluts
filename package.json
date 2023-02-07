@@ -14,7 +14,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@harmoniclabs/plu-ts": "^0.2.0-dev4"
+    "@harmoniclabs/plu-ts": "^0.2.0-dev5"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
