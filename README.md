@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">cardano-cli</h1>
+  <h1 align="center">cardanocli-pluts</h1>
 
   <p align="center">
     <a href="https://twitter.com/hlabs_tech">
@@ -19,6 +19,7 @@
 
 - `cardano-node >= 1.29.0`
 - `node.js >= 12.19.0`
+- `plu-ts >= 0.2.0`
 
 
 ## Getting started
@@ -27,7 +28,7 @@
 import { CardanoCliPluts } from "@harmoniclabs/cardanocli-pluts"
 import { Value } from "@harmoniclabs/plu-ts"
 
-const cli = new CardanocliJs({
+const cli = new CardanoCliPluts({
     network: "testnet 42"
 });
 
