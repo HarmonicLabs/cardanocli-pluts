@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">cardano-cli</h1>
+  <h1 align="center">cardanocli-pluts</h1>
 
   <p align="center">
     <a href="https://twitter.com/hlabs_tech">
