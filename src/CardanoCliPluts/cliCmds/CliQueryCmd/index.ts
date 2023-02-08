@@ -1,10 +1,9 @@
 import { CliCmd, ICliCmdConfig } from "../CliCmd";
 import { Address, AddressStr, ProtocolParamters, TxOutRef, UTxO } from "@harmoniclabs/plu-ts";
 import { WithPath, withPath } from "../../../utils/path/withPath";
-import randId from "../../../utils/randId";
 import { exec } from "../../../utils/node_promises";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
-import { existsSync, readFileSync, writeFile, writeFileSync } from "node:fs";
+import { existsSync, writeFile } from "node:fs";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { parseUtxoOutput } from "./parseUtxoOutput";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";

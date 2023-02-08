@@ -19,5 +19,7 @@ describe("cli.query.utxo", () => {
             )
         );
 
+        await cli.query.protocolParameters()
+
     })
 })

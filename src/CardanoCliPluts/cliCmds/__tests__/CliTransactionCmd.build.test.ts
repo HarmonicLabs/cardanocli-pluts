@@ -85,7 +85,7 @@ describe("", () => {
             changeAddress: addr
         });
 
-        /*
+        //*
         console.log(
             JSON.stringify(
                 tx.toJson(),
