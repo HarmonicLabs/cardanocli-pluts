@@ -1,9 +1,9 @@
 {
   "name": "@harmoniclabs/cardanocli-pluts",
-  "version": "0.1.2",
+  "version": "0.1.2-dev1",
   "description": "typescript wrapper on top of the cardano-cli tool",
   "main": "dist/index.js",
-  "type": "module",
+  "type": "commonjs",
   "files": [
     "dist"
   ],
@@ -17,7 +17,7 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "@harmoniclabs/plu-ts": "^0.2.0-dev6"
+    "@harmoniclabs/plu-ts": "^0.2.0-dev7"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
