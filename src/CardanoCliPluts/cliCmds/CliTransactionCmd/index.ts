@@ -11,7 +11,7 @@ import { waitForFileExists } from "../../../utils/waitForFileExists";
 import { existsSync, readFileSync } from "fs";
 import { getPath } from "../../../utils/path/getPath";
 import { isCardanoEra } from "../../../types/CardanoEra";
-import { CliTransactionCmdBuild, needsPlutusScripts, includeUtxosRefWith, requiredSignersToOpts, mintToOpt, certToOpt, withdrawToOpt, writeCborFile } from "./tx_build_utils";
+import { CliTransactionCmdBuild, needsPlutusScripts, includeUtxosRefWith, requiredSignersToOpts, getMintOpts, certToOpt, withdrawToOpt, writeCborFile, mintsToCliEntry } from "./tx_build_utils";
 import { extractIdFromPath } from "../../../utils/extractFromPath";
 import { unlink, rename } from "node:fs/promises";
 import { Buffer } from "buffer";
@@ -186,9 +186,9 @@ export class CliTransactionCmd extends CliCmd
         cmd += ` --invalid-hereafter ${forceBigUInt( invalidAfter ).toString()} `;
 
         if( mints !== undefined )
-        cmd += (await Promise.all(
+        cmd += mintsToCliEntry( mints ) + (await Promise.all(
                 mints.map(
-                    mintToOpt({
+                    getMintOpts({
                         postfix: "minting_policy",
                         tmpDirPath: this.cfg.tmpDirPath
                     })

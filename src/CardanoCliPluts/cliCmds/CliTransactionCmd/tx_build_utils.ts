@@ -1,4 +1,4 @@
-import { Address, AddressStr, PubKeyHash, CanBeUInteger, TxMetadata, ProtocolUpdateProposal, Script, ScriptType, Hash28, Certificate, hashData, Data, dataToCbor } from "@harmoniclabs/plu-ts";
+import { Address, AddressStr, PubKeyHash, CanBeUInteger, TxMetadata, ProtocolUpdateProposal, Script, ScriptType, Hash28, Certificate, hashData, Data, dataToCbor, Value } from "@harmoniclabs/plu-ts";
 import { existsSync, readFileSync, writeFile, writeFileSync } from "fs";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
 import { CardanoEra } from "../../../types/CardanoEra";
@@ -114,7 +114,17 @@ export function requiredSignersToOpts(
     .join(' ') ?? ""
 }
 
-export function mintToOpt( details: EnsurePathDetails ): (mint: ICliTxBuildMint ) => Promise<string>
+export function mintsToCliEntry( mints: ICliTxBuildMint[] ): string
+{
+    return` --mint ${
+        valueToString(
+            mints.reduce( (acc, { value }) => Value.add(acc,value), Value.zero ),
+            false // include lovelaces
+        )
+    } `;
+}
+
+export function getMintOpts( details: EnsurePathDetails ): (mint: ICliTxBuildMint ) => Promise<string>
 {
     return (async({
         value,
@@ -122,7 +132,7 @@ export function mintToOpt( details: EnsurePathDetails ): (mint: ICliTxBuildMint 
     }: ICliTxBuildMint ) => 
     {
 
-        let opt = ` --mint ${valueToString(value, false)} `;
+        let opt = "  "
     
         if( ObjectUtils.hasOwn( script, "inline" ) )
         {
