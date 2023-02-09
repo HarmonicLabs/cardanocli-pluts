@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/cardanocli-pluts",
-  "version": "0.1.2-dev1",
+  "version": "0.1.2-dev5",
   "description": "typescript wrapper on top of the cardano-cli tool",
   "main": "dist/index.js",
   "type": "commonjs",
@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "build": "rm -rf ./dist && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "test": "jest",
     "clear-jest": "jest --clearCache",
     "test-watch": "jest --watchman",
@@ -17,7 +17,7 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "@harmoniclabs/plu-ts": "^0.2.0-dev7"
+    "@harmoniclabs/plu-ts": "^0.2.0-dev11"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
