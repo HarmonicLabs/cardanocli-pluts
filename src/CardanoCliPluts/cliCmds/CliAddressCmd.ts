@@ -200,27 +200,42 @@ export class CliAddressCmd extends CliCmd
         const id = extractIdFromPath( paymentPath );
         const outPath = `${this.cfg.tmpDirPath}/${id}_addr.txt`;
 
-        if( ObjectUtils.hasOwn( stake, "publicKey") )
+        if( stake !== undefined )
         {
-            stakeCliFullOption = "--stake-verification-key-file ";
-
-            if( ObjectUtils.hasOwn( stake.publicKey, "path" ) )
-                paymentPath = stake.publicKey.path;
+            if( ObjectUtils.hasOwn( stake, "publicKey") )
+            {
+                stakeCliFullOption = "--stake-verification-key-file ";
+    
+                if( ObjectUtils.hasOwn( stake.publicKey, "path" ) )
+                    stakeCliFullOption += stake.publicKey.path;
+                else
+                 stakeCliFullOption += (await ensurePath(
+                        PublicKey,
+                        stake.publicKey,
+                        {
+                            postfix: "stake_vkey",
+                            tmpDirPath: this.cfg.tmpDirPath,
+                            jsonType: ""
+                        }
+                    )).path;
+            }
             else
-                paymentPath = (await ensurePath(
-                    PublicKey,
-                    stake.publicKey,
-                    {
-                        postfix: "stake_vkey",
-                        tmpDirPath: this.cfg.tmpDirPath,
-                        jsonType: ""
-                    }
-                )).path;
-        }
-        else
-        {
-            stakeCliFullOption = "--stake-script-file ";
+            {
+                stakeCliFullOption = "--stake-script-file ";
 
+                if( ObjectUtils.hasOwn( stake.paymentScript, "path" ) )
+                    stakeCliFullOption += stake.paymentScript.path;
+                else
+                 stakeCliFullOption += (await ensurePath(
+                        Script,
+                        stake.paymentScript,
+                        {
+                            postfix: "stake_script",
+                            tmpDirPath: this.cfg.tmpDirPath,
+                            jsonType: ""
+                        }
+                    )).path;
+            }
         }
 
         await exec(

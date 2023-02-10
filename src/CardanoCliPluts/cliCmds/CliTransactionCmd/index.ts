@@ -1,4 +1,4 @@
-import { PrivateKey, Tx, forceBigUInt } from "@harmoniclabs/plu-ts";
+import { Hash32, PrivateKey, Tx, forceBigUInt } from "@harmoniclabs/plu-ts";
 import { OrPath, WithPath, withPath } from "../../../utils/path/withPath";
 import { CliCmd, ICliCmdConfig } from "../CliCmd";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -270,6 +270,21 @@ export class CliTransactionCmd extends CliCmd
             path,
             Tx.fromCbor( txCbor )
         );
+    }
+
+    async txId( tx: OrPath<Tx> | { tx: OrPath<Tx> } ): Promise<Hash32>
+    {
+        tx = ObjectUtils.hasOwn( tx, "tx" ) ? tx.tx as OrPath<Tx> : tx;
+
+        const txId = (
+            await exec(
+                `${this.cfg.cliPath} transaction txid --tx-file ${
+                    await getPath( Tx, tx , { ...this.cfg , postfix: "tx" } )
+                }`
+            )
+        ).stdout;
+
+        return new Hash32( txId )
     }
 
 }

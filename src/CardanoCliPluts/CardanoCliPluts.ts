@@ -44,7 +44,7 @@ export class CardanoCliPluts
             process.env["CARDANO_NODE_SOCKET_PATH"] = socketPath
         }
 
-        let network: "mainnet" | `testnet ${number}`;
+        let network: "mainnet" | `testnet-magic ${number}`;
         if( _network === "mainnet" ) network = "mainnet";
         else
         {
