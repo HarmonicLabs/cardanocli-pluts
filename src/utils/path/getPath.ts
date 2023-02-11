@@ -10,7 +10,7 @@ export async function getPath<T extends PlutsClassToCbor>(
     details: EnsurePathDetails
 ): Promise<string>
 {
-    if( !ObjectUtils.hasOwn( maybePath, "path" ) )
+    if( !ObjectUtils.hasOwn( maybePath, "path" ) || maybePath.path === undefined )
     {
         return (await ensurePath(
             ctor,

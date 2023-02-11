@@ -1,4 +1,4 @@
-import { Script } from "@harmoniclabs/plu-ts"
+import { Script, ScriptType } from "@harmoniclabs/plu-ts"
 import { CanBeUTxORef, forceUTxORefString } from "../CanBeUTxORef"
 import { CanBeData, forceData } from "../../../../utils/CanBeData"
 import { CardanoCliPlutsBaseError } from "../../../../errors/ CardanoCliPlutsBaseError"
@@ -42,8 +42,6 @@ export function toInputBuildOptions(
                 "multiple spending scripts specified for " + utxoRefStr
             );
 
-            
-
             result +=
             ` --spending-tx-in-reference ${forceUTxORefString( referenceScriptV2.refUtxo )} \
             --spending-plutus-script-v2 `;
@@ -70,15 +68,15 @@ export function toInputBuildOptions(
         }
         else if( inputScript !== undefined )
         {
-            if( !ObjectUtils.hasOwn( inputScript.script, "path" ) )
+            if( !ObjectUtils.hasOwn( inputScript.script, "path" ) || inputScript.script.path === undefined )
             {
-                ensurePath(
+                await ensurePath(
                     Script,
                     inputScript.script,
                     {
                         postfix: "script",
                         tmpDirPath: cfg.tmpDirPath,
-                        jsonType: inputScript.script.type
+                        jsonType: (inputScript?.script as any).type ?? ScriptType.PlutusV2
                     }
                 );
             }

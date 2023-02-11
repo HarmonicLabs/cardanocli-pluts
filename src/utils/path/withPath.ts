@@ -9,10 +9,7 @@ export type OrPath<T> = { path: string } | T
 
 export function withPath<T>( path: string, something: T, dir?: string ): WithPath<T>
 {
-    if(
-        ObjectUtils.hasOwn( something, "path" ) &&
-        Object.getOwnPropertyDescriptor( something, "path" )?.configurable === false
-    )
+    if( ObjectUtils.hasOwn( something, "path" ) )
     {
         something.path = path;
         return something;
@@ -25,10 +22,6 @@ export function withPath<T>( path: string, something: T, dir?: string ): WithPat
             get: () => _path,
             set: ( newPath: any ) => {
                 if( typeof newPath !== "string" ) return;
-                if( 
-                    dir !== undefined &&
-                    !path.startsWith( dir )
-                ) return;
 
                 _path = newPath;
             },
