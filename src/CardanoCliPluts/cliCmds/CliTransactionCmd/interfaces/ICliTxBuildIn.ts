@@ -6,7 +6,7 @@ import { ICliCmdConfig } from "../../CliCmd"
 import { OrPath } from "../../../../utils/path/withPath"
 import ObjectUtils from "../../../../utils/ObjectUtils"
 import { ensurePath } from "../../../../utils/path/ensurePath"
-import { writeCborFile, writeDataAsCbor } from "../tx_build_utils"
+import { writeDataAsCbor } from "../tx_build_utils"
 
 export interface ICliTxBuildIn {
     utxo: CanBeUTxORef,
@@ -55,7 +55,7 @@ export function toInputBuildOptions(
                 result += ` --spending-reference-tx-in-datum-cbor-file ${
                     await writeDataAsCbor(
                         forceData( referenceScriptV2.datum ),
-                        ""
+                        cfg.tmpDirPath
                     )
                 } `;
             }
@@ -63,7 +63,7 @@ export function toInputBuildOptions(
             result += ` --spending-reference-tx-in-redeemer-cbor-file ${
                 await writeDataAsCbor(
                     forceData( referenceScriptV2.redeemer ),
-                    ""
+                    cfg.tmpDirPath
                 )
             } `;
 
@@ -92,7 +92,7 @@ export function toInputBuildOptions(
                 result += ` --tx-in-datum-cbor-file ${
                     await writeDataAsCbor(
                         forceData( inputScript.datum ),
-                        ""
+                        cfg.tmpDirPath
                     )
                 } `;
             }
@@ -100,7 +100,7 @@ export function toInputBuildOptions(
             result += ` --tx-in-redeemer-cbor-file ${
                 await writeDataAsCbor(
                     forceData( inputScript.redeemer ),
-                    ""
+                    cfg.tmpDirPath
                 )
             } `;
 
