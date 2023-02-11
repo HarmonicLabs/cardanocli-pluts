@@ -1,7 +1,7 @@
 import { AnyCertificate, Script } from "@harmoniclabs/plu-ts"
-import { CanBeData } from "../../../utils/CanBeData"
-import { OrPath } from "../../../utils/path/withPath"
-import { CanBeUTxORef } from "./CanBeUTxORef"
+import { CanBeData } from "../../../../utils/CanBeData"
+import { OrPath } from "../../../../utils/path/withPath"
+import { CanBeUTxORef } from "../CanBeUTxORef"
 
 export interface ICliTxBuildCert {
     cert: OrPath<AnyCertificate>

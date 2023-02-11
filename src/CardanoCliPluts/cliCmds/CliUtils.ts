@@ -1,8 +1,7 @@
-import { Address, PrivateKey, PublicKey } from "@harmoniclabs/plu-ts";
+import { Address, PrivateKey, PublicKey, Script, ScriptType } from "@harmoniclabs/plu-ts";
 import { WithPath, withPath } from "../../utils/path/withPath";
 import { CliCmd, ICliCmdConfig } from "./CliCmd";
 import { readFileSync } from "fs";
-
 
 export class CliUtils extends CliCmd
 {
@@ -44,6 +43,21 @@ export class CliUtils extends CliCmd
                     readFileSync( path )
                     .toString()
                 ).cborHex
+            )
+        );
+    }
+
+    readScript( path: string ): WithPath<Script>
+    {
+        const json = JSON.parse(
+            readFileSync( path, { encoding: "utf-8"} )
+        );
+
+        return withPath(
+            path,
+            Script.fromCbor(
+                json.cborHex,
+                json.type === ScriptType.PlutusV1 || json.type === ScriptType.PlutusV2 ? json.type : ScriptType.NativeScript
             )
         );
     }

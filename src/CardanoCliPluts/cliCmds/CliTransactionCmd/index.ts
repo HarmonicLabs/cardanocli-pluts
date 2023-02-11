@@ -4,8 +4,8 @@ import { CliCmd, ICliCmdConfig } from "../CliCmd";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { exec } from "../../../utils/node_promises";
 import { ensurePath } from "../../../utils/path/ensurePath";
-import { toInputBuildOptions } from "./ICliTxBuildIn";
-import { toOutputBuildOptions, toReturnCollateralOpt } from "./ITxBuildOutput";
+import { toInputBuildOptions } from "./interfaces/ICliTxBuildIn";
+import { toOutputBuildOptions, toReturnCollateralOpt } from "./interfaces/ITxBuildOutput";
 import randId from "../../../utils/randId";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
 import { existsSync, readFileSync } from "fs";
@@ -154,7 +154,7 @@ export class CliTransactionCmd extends CliCmd
             --cddl-format \
             --${era !== undefined && isCardanoEra(era) ? era : "babbage"}-era \
             --${this.cfg.network} \
-            ${inputs.map( toInputBuildOptions ( this.cfg ) ).join(' ')} `;
+            ${(await Promise.all(inputs.map( toInputBuildOptions( this.cfg ) ))).join(' ')} `;
 
         if(
             needsPlutusScripts(

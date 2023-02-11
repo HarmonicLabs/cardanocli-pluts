@@ -1,11 +1,12 @@
 import { Script } from "@harmoniclabs/plu-ts"
-import { CanBeUTxORef, forceUTxORefString } from "./CanBeUTxORef"
-import { CanBeData, forceData } from "../../../utils/CanBeData"
-import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError"
-import { ICliCmdConfig } from "../CliCmd"
-import { OrPath } from "../../../utils/path/withPath"
-import ObjectUtils from "../../../utils/ObjectUtils"
-import { ensurePath } from "../../../utils/path/ensurePath"
+import { CanBeUTxORef, forceUTxORefString } from "../CanBeUTxORef"
+import { CanBeData, forceData } from "../../../../utils/CanBeData"
+import { CardanoCliPlutsBaseError } from "../../../../errors/ CardanoCliPlutsBaseError"
+import { ICliCmdConfig } from "../../CliCmd"
+import { OrPath } from "../../../../utils/path/withPath"
+import ObjectUtils from "../../../../utils/ObjectUtils"
+import { ensurePath } from "../../../../utils/path/ensurePath"
+import { writeCborFile, writeDataAsCbor } from "../tx_build_utils"
 
 export interface ICliTxBuildIn {
     utxo: CanBeUTxORef,
@@ -23,13 +24,13 @@ export interface ICliTxBuildIn {
 
 export function toInputBuildOptions(
     cfg: Readonly<ICliCmdConfig>
-): (inputOptions: ICliTxBuildIn) => string
+): (inputOptions: ICliTxBuildIn) => Promise<string>
 {
-    return function ({
+    return async function ({
         utxo,
         referenceScriptV2,
         inputScript
-    }: ICliTxBuildIn): string
+    }: ICliTxBuildIn): Promise<string>
     {
         const utxoRefStr = forceUTxORefString( utxo );
         let result = ` --tx-in ${utxoRefStr} `;
@@ -41,6 +42,8 @@ export function toInputBuildOptions(
                 "multiple spending scripts specified for " + utxoRefStr
             );
 
+            
+
             result +=
             ` --spending-tx-in-reference ${forceUTxORefString( referenceScriptV2.refUtxo )} \
             --spending-plutus-script-v2 `;
@@ -49,18 +52,18 @@ export function toInputBuildOptions(
             result += " --spending-reference-tx-in-inline-datum-present ";
             else
             {
-                result += ` --spending-reference-tx-in-datum-value ${
-                    JSON.stringify(
-                        forceData( referenceScriptV2.datum )
-                        .toJson()
+                result += ` --spending-reference-tx-in-datum-cbor-file ${
+                    await writeDataAsCbor(
+                        forceData( referenceScriptV2.datum ),
+                        ""
                     )
                 } `;
             }
 
-            result += ` --spending-reference-tx-in-redeemer-value ${
-                JSON.stringify(
-                    forceData( referenceScriptV2.redeemer )
-                    .toJson()
+            result += ` --spending-reference-tx-in-redeemer-cbor-file ${
+                await writeDataAsCbor(
+                    forceData( referenceScriptV2.redeemer ),
+                    ""
                 )
             } `;
 
@@ -86,18 +89,18 @@ export function toInputBuildOptions(
             result += " --tx-in-inline-datum-present ";
             else
             {
-                result += ` --tx-in-datum-value ${
-                    JSON.stringify(
-                        forceData( inputScript.datum )
-                        .toJson()
+                result += ` --tx-in-datum-cbor-file ${
+                    await writeDataAsCbor(
+                        forceData( inputScript.datum ),
+                        ""
                     )
                 } `;
             }
 
-            result += ` --tx-in-redeemer-value ${
-                JSON.stringify(
-                    forceData( inputScript.redeemer )
-                    .toJson()
+            result += ` --tx-in-redeemer-cbor-file ${
+                await writeDataAsCbor(
+                    forceData( inputScript.redeemer ),
+                    ""
                 )
             } `;
 
