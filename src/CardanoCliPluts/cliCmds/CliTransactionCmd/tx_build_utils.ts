@@ -161,7 +161,7 @@ export function getMintOpts( details: EnsurePathDetails ): (mint: ICliTxBuildMin
                         forceData(script.redeemer),
                         details.tmpDirPath
                     )} ` + 
-                ` --policy-id ${script.policyId.toString()} `
+                ` --policy-id ${(script as any).policyId.toString()} `
         }
     
         return opt;
@@ -274,12 +274,7 @@ export async function writeDataAsCbor( data: Data, tmpDirPath: string ): Promise
 {
     const path = 
         `${tmpDirPath}/${
-            hashData( data )
-            .map( n => 
-                n.toString(16)
-                .padStart(2,'0')
-            )
-            .join('')
+            hashData( data ).toString()
         }_data.cbor`
         
     if( existsSync(path) ) return path;
