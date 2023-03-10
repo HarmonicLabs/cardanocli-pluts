@@ -21,7 +21,8 @@ export interface PlutsClassFromCbor<T extends PlutsClassToCbor> {
 export interface EnsurePathDetails {
     postfix: string,
     tmpDirPath: string,
-    jsonType?: string
+    jsonType?: string,
+    description?: string
 }
 
 export async function ensurePath<T extends PlutsClassToCbor>( 
@@ -30,7 +31,8 @@ export async function ensurePath<T extends PlutsClassToCbor>(
     {
         postfix,
         tmpDirPath,
-        jsonType
+        jsonType,
+        description
     }: EnsurePathDetails
 ): Promise<WithPath<T>>
 {
@@ -86,7 +88,7 @@ export async function ensurePath<T extends PlutsClassToCbor>(
             path,
             JSON.stringify({
                 "type": jsonType ?? "",
-                "description": "",
+                "description": description ?? "",
                 "cborHex": cborStr.asString
             })
         );

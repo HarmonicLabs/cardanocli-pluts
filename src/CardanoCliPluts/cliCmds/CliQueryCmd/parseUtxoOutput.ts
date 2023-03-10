@@ -47,7 +47,7 @@ function replaceChOnlyBetweenQuotes( utxoOutput: string, toBeReplaced: string, r
     return outStr.join('');
 }
 
-export function parseUtxoOutput( utxoOuput: string, addr: Address ): UTxO[]
+export function parseUtxoOutput( utxoOuput: string, addr: Address, refScript?: Script ): UTxO[]
 {
     const lines = utxoOuput.split('\n').slice(2);
     const len = lines.length - 1; // last line is empty
@@ -65,7 +65,6 @@ export function parseUtxoOutput( utxoOuput: string, addr: Address ): UTxO[]
 
         let value: Value = Value.lovelaces( BigInt( lovelaces ) );
         let datum: Hash32 | Data | undefined = undefined;
-        let refScript: Script<ScriptType.PlutusV2> | undefined = undefined;
 
         for( let i = 4; i < valuesLen; )
         {
@@ -221,7 +220,7 @@ export function parseInlineDatum(
             nStr = nStr.slice(0, nStr.length - 1 );
             continue;
         }
-        const buff: Buffer = parseAsciiEscapedString( nStr.slice(1, nStr.length - 1 ) );
+        const buff = parseAsciiEscapedString( nStr.slice(1, nStr.length - 1 ) );
 
         return { data: new DataB(buff), increment: (i - _i) };
     }
@@ -414,7 +413,7 @@ const escapedAsciiWithEscape = ["\\DEL"].concat(
     new Array(128).fill(undefined).map( (_,i) => "\\" + (i + 128).toString() )
 )
 
-function parseAsciiEscapedString(str: string): Buffer
+function parseAsciiEscapedString(str: string): Uint8Array
 {
     const nums: number[] = [];
     
@@ -443,6 +442,6 @@ function parseAsciiEscapedString(str: string): Buffer
         nums.push(byte);
     }
 
-    return Buffer.from( nums )
+    return new Uint8Array( Buffer.from( nums ) )
 }
 //*/

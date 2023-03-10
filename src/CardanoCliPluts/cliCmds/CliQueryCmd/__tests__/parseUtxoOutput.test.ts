@@ -41,7 +41,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i )
                     )
                 ),
@@ -60,7 +60,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i + 32 )
                     )
                 ),
@@ -80,7 +80,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i + 64 )
                     )
                 ),
@@ -99,7 +99,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i + 96 )
                     )
                 ),
@@ -119,7 +119,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i + 128 )
                     )
                 ),
@@ -139,7 +139,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i + 160 )
                     )
                 ),
@@ -159,7 +159,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i + 192 )
                     )
                 ),
@@ -178,7 +178,7 @@ describe("parseInlineDatum", () => {
         .toEqual(
             {
                 data: new DataB(
-                    Buffer.from(
+                    new Uint8Array(
                         new Array(32).fill(undefined).map( (_,i) => i + 224 )
                     )
                 ),

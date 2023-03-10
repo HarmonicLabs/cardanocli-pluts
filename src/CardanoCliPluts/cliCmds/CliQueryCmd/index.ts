@@ -1,5 +1,5 @@
 import { CliCmd, ICliCmdConfig } from "../CliCmd";
-import { Address, AddressStr, ProtocolParamters, TxOutRef, UTxO } from "@harmoniclabs/plu-ts";
+import { Address, AddressStr, ProtocolParamters, Script, TxOutRef, UTxO } from "@harmoniclabs/plu-ts";
 import { WithPath, withPath } from "../../../utils/path/withPath";
 import { exec } from "../../../utils/node_promises";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
@@ -18,7 +18,9 @@ export type QueryUTxOArgs = {
 } | {
     addresses: QueryByAddressFilter[]
 } | {
-    byTxOutRef: QueryByTxOutRefFilter[]
+    byTxOutRef: QueryByTxOutRefFilter[],
+    address?: Address,
+    refScript?: Script
 } | {
     /**
      * @deprecated
@@ -103,7 +105,7 @@ export class CliQueryCmd extends CliCmd
                         --${this.cfg.network} \
                         ${(args.byTxOutRef as QueryByTxOutRefFilter[])
                             .map( byRef =>
-                                "--tx-in" + (
+                                "--tx-in " + (
                                     typeof byRef === "string" ? 
                                     byRef :
                                     byRef.toString() 
@@ -113,7 +115,8 @@ export class CliQueryCmd extends CliCmd
                         { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
                     )
                 ).stdout,
-                Address.fake
+                (args as any).address ?? Address.fake,
+                (args as any).refScript
             );
         }
         if( ObjectUtils.hasOwn( args, "addresses" ) )

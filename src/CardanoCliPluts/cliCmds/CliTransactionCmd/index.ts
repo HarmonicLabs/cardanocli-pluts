@@ -14,7 +14,6 @@ import { isCardanoEra } from "../../../types/CardanoEra";
 import { CliTransactionCmdBuild, needsPlutusScripts, includeUtxosRefWith, requiredSignersToOpts, getMintOpts, certToOpt, withdrawToOpt, writeCborFile, mintsToCliEntry } from "./tx_build_utils";
 import { extractIdFromPath } from "../../../utils/extractFromPath";
 import { unlink, rename } from "node:fs/promises";
-import { Buffer } from "buffer";
 import { sha256 } from "../../../utils/sha256";
 
 
@@ -73,7 +72,9 @@ export class CliTransactionCmd extends CliCmd
             tx,
             {
                 postfix: "tx_signed",
-                tmpDirPath: this.cfg.tmpDirPath
+                tmpDirPath: this.cfg.tmpDirPath,
+                jsonType: "Unwitnessed Tx BabbageEra",
+                description: "Ledger Cddl Format"
             }
         );
         const skeyPath: string = await getPath(
@@ -103,13 +104,13 @@ export class CliTransactionCmd extends CliCmd
 
         await waitForFileExists( outPath );
 
-        const txCbor = Buffer.from(
+        const txCbor = new Uint8Array( Buffer.from(
             JSON.parse(
                 readFileSync( outPath )
                 .toString()
             ).cborHex,
             "hex"
-        );
+        ));
 
         // the hash is different from the tx hash
         // since it includes also non-body fields
@@ -225,7 +226,7 @@ export class CliTransactionCmd extends CliCmd
             ObjectUtils.hasOwn( metadata, "path" ) ?
             metadata.path :
             await writeCborFile(
-                metadata.toCbor().asBytes,
+                (metadata as any).toCbor().asBytes,
                 this.cfg.tmpDirPath,
                 "metadata"
             )
@@ -245,13 +246,13 @@ export class CliTransactionCmd extends CliCmd
 
         await waitForFileExists( outPath, 5000 );
 
-        const txCbor = Buffer.from(
+        const txCbor = new Uint8Array( Buffer.from(
             JSON.parse(
                 readFileSync( outPath )
                 .toString()
             ).cborHex,
             "hex"
-        );
+        ));
 
         // the hash is different from the tx hash
         // since it includes also non-body fields
@@ -279,7 +280,7 @@ export class CliTransactionCmd extends CliCmd
         const txId = (
             await exec(
                 `${this.cfg.cliPath} transaction txid --tx-file ${
-                    await getPath( Tx, tx , { ...this.cfg , postfix: "tx" } )
+                    await getPath( Tx, tx as any, { ...this.cfg , postfix: "tx" } )
                 }`
             )
         ).stdout;

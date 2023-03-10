@@ -55,9 +55,9 @@ export class CliUtils extends CliCmd
 
         return withPath(
             path,
-            Script.fromCbor(
-                json.cborHex,
-                json.type === ScriptType.PlutusV1 || json.type === ScriptType.PlutusV2 ? json.type : ScriptType.NativeScript
+            new Script(
+                json.type === ScriptType.PlutusV1 || json.type === ScriptType.PlutusV2 ? json.type : ScriptType.NativeScript,
+                new Uint8Array( Buffer.from( json.cborHex, "hex" ) ),
             )
         );
     }

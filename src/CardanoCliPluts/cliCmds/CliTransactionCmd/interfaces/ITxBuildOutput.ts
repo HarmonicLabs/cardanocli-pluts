@@ -97,7 +97,7 @@ export function valueToString( value: Value, includeLovelaces = true ): string
                 value.get(policy,assetNameAscii)
                 .toString()
             } ${
-                policy.asString
+                policy.toString()
             }.${
                 Buffer.from( assetNameAscii, "ascii" ).toString("hex")
             }+`;

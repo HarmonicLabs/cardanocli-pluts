@@ -287,12 +287,12 @@ export async function writeDataAsCbor( data: Data, tmpDirPath: string ): Promise
 }
 
 export async function writeCborFile(
-    cStr: CborString | Buffer,
+    cStr: CborString | Uint8Array,
     tmpDirPath: string,
     postfix: string
 ): Promise<string>
 {
-    const data = Buffer.isBuffer( cStr ) ? cStr : cStr.asBytes;
+    const data = ( cStr instanceof Uint8Array ) ? cStr : cStr.toBuffer();
 
     const path = 
         `${tmpDirPath}/${
