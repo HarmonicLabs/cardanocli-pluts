@@ -1,5 +1,4 @@
-import { Address, AddressStr, Hash32, Script, Value, dataToCbor } from "@harmoniclabs/plu-ts"
-import { CanBeData, forceData } from "../../../../utils/CanBeData"
+import { Address, AddressStr, CanBeData, Hash32, Script, Value, dataToCbor, forceData } from "@harmoniclabs/plu-ts"
 import { ICliCmdConfig } from "../../CliCmd"
 import { OrPath } from "../../../../utils/path/withPath"
 import ObjectUtils from "../../../../utils/ObjectUtils"

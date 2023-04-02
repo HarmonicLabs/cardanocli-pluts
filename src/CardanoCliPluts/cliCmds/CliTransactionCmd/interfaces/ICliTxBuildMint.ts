@@ -1,5 +1,4 @@
-import { Hash32, Script, Value } from "@harmoniclabs/plu-ts"
-import { CanBeData } from "../../../../utils/CanBeData"
+import { CanBeData, Hash32, Script, Value } from "@harmoniclabs/plu-ts"
 import { CanBeUTxORef } from "../CanBeUTxORef"
 import { OrPath } from "../../../../utils/path/withPath"
 

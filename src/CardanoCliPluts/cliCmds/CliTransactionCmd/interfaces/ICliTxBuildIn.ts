@@ -1,6 +1,5 @@
-import { Script, ScriptType } from "@harmoniclabs/plu-ts"
+import { CanBeData, Script, ScriptType, forceData } from "@harmoniclabs/plu-ts"
 import { CanBeUTxORef, forceUTxORefString } from "../CanBeUTxORef"
-import { CanBeData, forceData } from "../../../../utils/CanBeData"
 import { CardanoCliPlutsBaseError } from "../../../../errors/ CardanoCliPlutsBaseError"
 import { ICliCmdConfig } from "../../CliCmd"
 import { OrPath } from "../../../../utils/path/withPath"

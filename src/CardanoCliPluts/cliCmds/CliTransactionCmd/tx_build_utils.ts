@@ -1,8 +1,7 @@
-import { Address, AddressStr, PubKeyHash, CanBeUInteger, TxMetadata, ProtocolUpdateProposal, Script, ScriptType, Hash28, Certificate, hashData, Data, dataToCbor, Value } from "@harmoniclabs/plu-ts";
-import { existsSync, readFileSync, writeFile, writeFileSync } from "fs";
+import { Address, AddressStr, PubKeyHash, CanBeUInteger, TxMetadata, Script, ScriptType, Hash28, Certificate, hashData, Data, dataToCbor, Value, forceData } from "@harmoniclabs/plu-ts";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
 import { CardanoEra } from "../../../types/CardanoEra";
-import { forceData } from "../../../utils/CanBeData";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { EnsurePathDetails, ensurePath } from "../../../utils/path/ensurePath";
 import { getPath } from "../../../utils/path/getPath";

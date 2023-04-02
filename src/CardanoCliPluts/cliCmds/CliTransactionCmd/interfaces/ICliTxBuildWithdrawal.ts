@@ -1,5 +1,4 @@
-import { Script, StakeAddress, StakeAddressBech32 } from "@harmoniclabs/plu-ts"
-import { CanBeData } from "../../../../utils/CanBeData"
+import { CanBeData, Script, StakeAddress, StakeAddressBech32 } from "@harmoniclabs/plu-ts"
 import { OrPath } from "../../../../utils/path/withPath"
 import { CanBeUTxORef } from "../CanBeUTxORef"
 

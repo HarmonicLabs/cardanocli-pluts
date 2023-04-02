@@ -1,5 +1,4 @@
-import { AnyCertificate, Script } from "@harmoniclabs/plu-ts"
-import { CanBeData } from "../../../../utils/CanBeData"
+import { AnyCertificate, Script, CanBeData } from "@harmoniclabs/plu-ts"
 import { OrPath } from "../../../../utils/path/withPath"
 import { CanBeUTxORef } from "../CanBeUTxORef"
 
