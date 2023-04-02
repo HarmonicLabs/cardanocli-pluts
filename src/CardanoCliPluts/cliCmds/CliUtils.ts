@@ -1,7 +1,9 @@
-import { Address, PrivateKey, PublicKey, Script, ScriptType } from "@harmoniclabs/plu-ts";
+import { Address, AddressStr, Hash28, PrivateKey, PublicKey, Script, ScriptType, Tx } from "@harmoniclabs/plu-ts";
 import { WithPath, withPath } from "../../utils/path/withPath";
 import { CliCmd, ICliCmdConfig } from "./CliCmd";
-import { readFileSync } from "fs";
+import { readFileSync, write } from "fs";
+import { waitForFileExists } from "../../utils/waitForFileExists";
+import { writeFile } from "fs/promises";
 
 export class CliUtils extends CliCmd
 {
@@ -10,7 +12,7 @@ export class CliUtils extends CliCmd
         super( cfg );
     }
 
-    readAddress(path: string): WithPath<Address>
+    readAddress( path: string ): WithPath<Address>
     {
         return withPath(
             path,
@@ -21,7 +23,13 @@ export class CliUtils extends CliCmd
         );
     }
 
-    readPublicKey(path: string): WithPath<PublicKey>
+    async writeAddress( address: Address | AddressStr, path: string ): Promise<void>
+    {
+        await writeFile( path, address.toString() );
+        await waitForFileExists( path );
+    }
+
+    readPublicKey( path: string ): WithPath<PublicKey>
     {
         return withPath(
             path,
@@ -32,6 +40,18 @@ export class CliUtils extends CliCmd
                 ).cborHex
             )
         );
+    }
+
+    async writePublicKey( pk: PublicKey, path: string ): Promise<void>
+    {
+        await writeFile( path, pk.toString() );
+        await waitForFileExists( path );
+    }
+
+    async writePublicKeyHash( pk: Hash28, path: string ): Promise<void>
+    {
+        await writeFile( path, pk.toString() );
+        await waitForFileExists( path );
     }
 
     readPrivateKey(path: string): WithPath<PrivateKey>
@@ -47,10 +67,15 @@ export class CliUtils extends CliCmd
         );
     }
 
+    async writePrivateKey( pk: PublicKey, path: string ): Promise<void>
+    {
+        await this.writePublicKey( pk, path );
+    }
+
     readScript( path: string ): WithPath<Script>
     {
         const json = JSON.parse(
-            readFileSync( path, { encoding: "utf-8"} )
+            readFileSync( path, { encoding: "utf-8" } )
         );
 
         return withPath(
@@ -60,6 +85,48 @@ export class CliUtils extends CliCmd
                 new Uint8Array( Buffer.from( json.cborHex, "hex" ) ),
             )
         );
+    }
+
+    async writeScript( script: Script, path: string )
+    {
+        await writeFile(
+            path, 
+            JSON.stringify(
+                script.toJson(),
+                undefined,
+                4
+            )
+        );
+        await waitForFileExists( path );
+    }
+
+    readTx( path: string ): WithPath<Tx>
+    {
+        const json = JSON.parse(
+            readFileSync( path, { encoding: "utf-8" } )
+        );
+
+        return withPath(
+            path,
+            Tx.fromCbor( json.cborHex )
+        );
+    }
+
+    async writeTx( tx: Tx, path: string )
+    {
+        await writeFile(
+            path, 
+            JSON.stringify(
+                {
+                    type: "Tx BabbageEra",
+                    description: "",
+                    cborHex: tx.toCbor().toString()
+                },
+                undefined,
+                4
+            )
+        );
+        await waitForFileExists( path );
     }
 
 }
