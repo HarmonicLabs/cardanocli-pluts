@@ -1,5 +1,5 @@
 import { CliCmd, ICliCmdConfig } from "../CliCmd";
-import { Address, AddressStr, ProtocolParamters, Script, TxOutRef, UTxO } from "@harmoniclabs/plu-ts";
+import { Address, AddressStr, Hash32, ProtocolParamters, Script, TxOutRef, UTxO } from "@harmoniclabs/plu-ts";
 import { WithPath, withPath } from "../../../utils/path/withPath";
 import { exec } from "../../../utils/node_promises";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
@@ -9,6 +9,9 @@ import { parseUtxoOutput } from "./parseUtxoOutput";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { CliQueryTipResult } from "./CliQueryTipResult";
+
+export * from "./CliQueryTipResult";
 
 export type QueryByTxOutRefFilter = (TxOutRef | `${string}#${number}`);
 export type QueryByAddressFilter = (Address | AddressStr);
@@ -36,6 +39,48 @@ export class CliQueryCmd extends CliCmd
     constructor( cfg: ICliCmdConfig )
     {
         super( cfg );
+    }
+
+    tipSync(): CliQueryTipResult
+    {
+        const json = JSON.parse(
+            execSync(
+                `${this.cfg.cliPath} query tip \
+                --${this.cfg.network} \
+                `,
+                { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
+            ).toString()
+        );
+
+        return {
+            block: Number( json.block ),
+            epoch: Number( json.epoch ),
+            era: json.era,
+            hash: new Hash32( json.hash ),
+            slot: Number( json.slot ),
+            syncProgress: Number( json.syncProgress )
+        };
+    }
+
+    async tip(): Promise<CliQueryTipResult>
+    {
+        const json = JSON.parse(
+            (await exec(
+                `${this.cfg.cliPath} query tip \
+                --${this.cfg.network} \
+                `,
+                { env: { "CARDANO_NODE_SOCKET_PATH": this.cfg.socketPath } }
+            )).toString()
+        );
+
+        return {
+            block: Number( json.block ),
+            epoch: Number( json.epoch ),
+            era: json.era,
+            hash: new Hash32( json.hash ),
+            slot: Number( json.slot ),
+            syncProgress: Number( json.syncProgress )
+        };
     }
 
     protocolParametersSync(): ProtocolParamters
