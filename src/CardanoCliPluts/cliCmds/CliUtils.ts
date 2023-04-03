@@ -44,7 +44,18 @@ export class CliUtils extends CliCmd
 
     async writePublicKey( pk: PublicKey, path: string ): Promise<void>
     {
-        await writeFile( path, pk.toString() );
+        await writeFile(
+            path,
+            JSON.stringify(
+                {
+                    type: "PaymentVerificationKeyShelley_ed25519",
+                    description: "Payment Verification Key",
+                    cborHex: pk.toString()
+                },
+                undefined,
+                4
+            )
+        );
         await waitForFileExists( path );
     }
 
@@ -67,9 +78,21 @@ export class CliUtils extends CliCmd
         );
     }
 
-    async writePrivateKey( pk: PublicKey, path: string ): Promise<void>
+    async writePrivateKey( pk: PrivateKey, path: string ): Promise<void>
     {
-        await this.writePublicKey( pk, path );
+        await writeFile(
+            path,
+            JSON.stringify(
+                {
+                    type: "PaymentSigningKeyShelley_ed25519",
+                    description: "Payment Signing Key",
+                    cborHex: pk.toString()
+                },
+                undefined,
+                4
+            )
+        );
+        await waitForFileExists( path );
     }
 
     readScript( path: string ): WithPath<Script>
