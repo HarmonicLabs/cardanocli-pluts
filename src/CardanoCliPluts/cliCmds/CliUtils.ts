@@ -50,18 +50,12 @@ export class CliUtils extends CliCmd
                 {
                     type: "PaymentVerificationKeyShelley_ed25519",
                     description: "Payment Verification Key",
-                    cborHex: pk.toString()
+                    cborHex: pk.toCbor().toString()
                 },
                 undefined,
                 4
             )
         );
-        await waitForFileExists( path );
-    }
-
-    async writePublicKeyHash( pk: Hash28, path: string ): Promise<void>
-    {
-        await writeFile( path, pk.toString() );
         await waitForFileExists( path );
     }
 
@@ -86,7 +80,7 @@ export class CliUtils extends CliCmd
                 {
                     type: "PaymentSigningKeyShelley_ed25519",
                     description: "Payment Signing Key",
-                    cborHex: pk.toString()
+                    cborHex: pk.toCbor().toString()
                 },
                 undefined,
                 4
