@@ -1,5 +1,5 @@
-import { DataConstr, DataMap, DataPair, DataI, DataB, DataList } from "@harmoniclabs/plu-ts"
-import { parseInlineDatum } from "../parseUtxoOutput"
+import { DataConstr, DataMap, DataPair, DataI, DataB, DataList, Address } from "@harmoniclabs/plu-ts"
+import { parseInlineDatum, parseUtxoOutput } from "../parseUtxoOutput"
 
 describe("parseInlineDatum", () => {
 
@@ -364,5 +364,18 @@ describe("parseInlineDatum", () => {
                 ]
             )
         )
-    })
+    });
+
+    test("ScriptDataInBabbageEra", () => {
+
+
+        const res = parseUtxoOutput(
+            `                           TxHash                                 TxIx        Amount
+            --------------------------------------------------------------------------------------
+            0001f78e9c082ec25073f8c7ebdf0bb7ecd4cddd410791d1ad1f0640040b008c     0        39400800 lovelace + 1 0be55d262b29f564998ff81efe21bdc0022621c12f15af08d0f2ddb1.34bf1bb426c5efcea04dc4f6240aa7aa68ef252897e599e71fae20e6e94c3e0e + 1 13aa2accf2e1561723aa26871e071fdf32c867cff7e7d50ad470d62f.4d494e53574150 + 6251695 952b83ed777c8ae4bdcabd4add3e913e80ad844e31d35b40ea5ed5a2.425443 + TxOutDatumHash ScriptDataInBabbageEra "aa8353f696f0bed1fc570a55dd64357c222061a33dfe8a8793cbfbbd3f7c6501"
+            `,Address.fake
+        );
+
+    });
+
 })

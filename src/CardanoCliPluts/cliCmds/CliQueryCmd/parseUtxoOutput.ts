@@ -112,7 +112,18 @@ export function parseUtxoOutput( utxoOuput: string, addr: Address, refScript?: S
                     
                     continue;
                 }
-                if( key === "TxOutDatumHash" )   datum = new Hash32( values[i++] );
+                if( key === "TxOutDatumHash" )
+                {
+                    let str: string;
+
+                    do {
+                        str = values[i++];
+                        str = str.startsWith('"') ? str.slice( 1, str.length - 1 ) : str
+                    } while( !isHex( str ) );
+                    
+
+                    datum = new Hash32( str );
+                }
                 if( key === "TxOutDatumNone" )   datum = undefined;
 
                 continue;
@@ -443,5 +454,12 @@ function parseAsciiEscapedString(str: string): Uint8Array
     }
 
     return new Uint8Array( Buffer.from( nums ) )
+}
+
+const hexChars = Object.freeze("abcdef0123456789".split(''));
+
+function isHex(str: string): boolean
+{
+    return str.split('').every( ch => hexChars.includes( ch ) );
 }
 //*/
