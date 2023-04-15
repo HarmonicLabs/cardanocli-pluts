@@ -131,7 +131,10 @@ export function parseUtxoOutput( utxoOuput: string, addr: Address, refScript?: S
 
             const quantity = BigInt( key );
             const [ policy, _asset ] = values[i++].split('.');
-            const asset = Buffer.from( _asset, "hex" ).toString("ascii");
+            const asset = Buffer.from(
+                _asset ?? "", // undefined implies asset name is empty string
+                "hex"
+            ).toString("ascii");
 
             value = Value.add(
                 value,
