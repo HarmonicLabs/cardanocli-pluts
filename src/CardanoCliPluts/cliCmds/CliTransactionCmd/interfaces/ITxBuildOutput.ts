@@ -71,7 +71,7 @@ export function toReturnCollateralOpt( collRet: {
     value: Value
 } | undefined ): string
 {
-    return collRet === undefined ? "" : ` --tx-out-return-collateral ${collRet.address.toString()} ${valueToString(collRet.value)} `;
+    return collRet === undefined ? "" : ` --tx-out-return-collateral ${collRet.address.toString()}${valueToString(collRet.value)} `;
 }
 
 export function valueToString( value: Value, includeLovelaces = true ): string
