@@ -16,6 +16,7 @@ import {
     Value,
 } from "@harmoniclabs/plu-ts";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 function replaceChOnlyBetweenQuotes( utxoOutput: string, toBeReplaced: string, replacement: string ): string
 {
@@ -131,19 +132,20 @@ export function parseUtxoOutput( utxoOuput: string, addr: Address, refScript?: S
 
             const quantity = BigInt( key );
             const [ policy, _asset ] = values[i++].split('.');
-            const asset = Buffer.from(
-                _asset ?? "", // undefined implies asset name is empty string
-                "hex"
-            ).toString("ascii");
+            // _asset === undefined -> implies asset name is empty string
+            const asset = fromHex( _asset ?? "" );
 
             value = Value.add(
                 value,
                 new Value([
                     {
                         policy: new Hash28( policy ),
-                        assets: {
-                            [asset]: quantity
-                        }
+                        assets: [
+                            {
+                                name: asset,
+                                quantity
+                            }
+                        ]
                     }
                 ])
             )

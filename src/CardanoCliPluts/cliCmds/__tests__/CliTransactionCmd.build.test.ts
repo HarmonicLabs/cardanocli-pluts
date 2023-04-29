@@ -1,10 +1,13 @@
 import { DataB, DataConstr, DataList, Script, ScriptType, Value, compile, data, pfn, pmakeUnit, unit } from "@harmoniclabs/plu-ts";
 import { cli } from "../../../../test_utils/cli";
 import { addr, privateKey } from "../../../../test_utils/addrs";
+import { fromAscii } from "@harmoniclabs/uint8array-utils";
 
 // jest.setTimeout( 60_000 )
 
 describe("", () => {
+
+    const nameTOKEN = fromAscii( "TOKEN" );
 
     test("let's see", async () => {
 
@@ -22,9 +25,9 @@ describe("", () => {
         const mintedTOKEN = new Value([
             {
                 policy: mint1.hash,
-                assets: {
-                    TOKEN: 1_000_000_000
-                }
+                assets: [
+                    Value.assetEntry( nameTOKEN, 1_000_000_000 )
+                ]
             }
         ]);
 
@@ -49,7 +52,7 @@ describe("", () => {
                         utxos.reduce(
                             (accum, elem) => {
 
-                                const amt = elem.resolved.value.get(mint1.hash.toString(),"TOKEN");
+                                const amt = elem.resolved.value.get( mint1.hash.toString(), nameTOKEN );
 
                                 return amt === BigInt(0) ? accum :
                                 Value.add(
@@ -57,9 +60,9 @@ describe("", () => {
                                     new Value([
                                         {
                                             policy: mint1.hash,
-                                            assets: {
-                                                TOKEN: amt
-                                            }
+                                            assets: [
+                                                Value.assetEntry( nameTOKEN, amt )
+                                            ]
                                         }
                                     ])
                                 );

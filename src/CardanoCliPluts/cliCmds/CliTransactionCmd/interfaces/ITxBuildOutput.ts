@@ -4,6 +4,7 @@ import { OrPath } from "../../../../utils/path/withPath"
 import ObjectUtils from "../../../../utils/ObjectUtils"
 import { ensurePath } from "../../../../utils/path/ensurePath"
 import { writeCborFile } from "../tx_build_utils"
+import { toHex } from "@harmoniclabs/uint8array-utils"
 
 export interface ICliTxBuildOut {
     address: Address | AddressStr,
@@ -90,15 +91,15 @@ export function valueToString( value: Value, includeLovelaces = true ): string
     {
         if( policy === "" ) continue;
 
-        for(const assetNameAscii in assets)
+        for(const { name, quantity } of assets)
         {
             valueStr += `${
-                value.get(policy,assetNameAscii)
+                quantity
                 .toString()
             } ${
                 policy.toString()
             }.${
-                Buffer.from( assetNameAscii, "ascii" ).toString("hex")
+                toHex( name )
             }+`;
         }
     }
