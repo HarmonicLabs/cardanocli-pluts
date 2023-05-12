@@ -1,12 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import ObjectUtils from "../ObjectUtils";
-import randId from "../randId";
 import { waitForFileExists } from "../waitForFileExists";
 import { OrPath, WithPath, withPath } from "./withPath";
-import { CborString } from "@harmoniclabs/plu-ts/dist/cbor/CborString";
 import { CardanoCliPlutsBaseError } from "../../errors/ CardanoCliPlutsBaseError";
-import { Script } from "@harmoniclabs/plu-ts";
-import { Hash, createHash } from "crypto";
+import { CborString, Script } from "@harmoniclabs/plu-ts";
+import { createHash } from "crypto";
 
 export interface PlutsClassToCbor {
     toCbor(): CborString
@@ -78,7 +76,7 @@ export async function ensurePath<T extends PlutsClassToCbor>(
 
     const path = `${tmpDirPath}/${
         createHash( "sha256" )
-        .update( cborStr.asBytes )
+        .update( cborStr.toBuffer() )
         .digest("hex")
     }_${postfix}.json`;
 

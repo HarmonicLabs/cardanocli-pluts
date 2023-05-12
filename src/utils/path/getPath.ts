@@ -2,7 +2,6 @@
 import ObjectUtils from "../ObjectUtils";
 import { PlutsClassToCbor, PlutsClassFromCbor, EnsurePathDetails, ensurePath } from "./ensurePath";
 import { OrPath } from "./withPath";
-import { extractExtensionFromPath, extractIdFromPath } from "../extractFromPath";
 
 export async function getPath<T extends PlutsClassToCbor>(
     ctor: PlutsClassFromCbor<T>,

@@ -1,4 +1,4 @@
-import { Address, AddressStr, PubKeyHash, CanBeUInteger, TxMetadata, Script, ScriptType, Hash28, Certificate, hashData, Data, dataToCbor, Value, forceData } from "@harmoniclabs/plu-ts";
+import { Address, AddressStr, PubKeyHash, CanBeUInteger, TxMetadata, Script, ScriptType, Hash28, Certificate, hashData, Data, dataToCbor, Value, forceData, CborString } from "@harmoniclabs/plu-ts";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { CardanoCliPlutsBaseError } from "../../../errors/ CardanoCliPlutsBaseError";
 import { CardanoEra } from "../../../types/CardanoEra";
@@ -13,7 +13,6 @@ import { ICliTxBuildMint } from "./interfaces/ICliTxBuildMint";
 import { ICliTxBuildWithdrawal } from "./interfaces/ICliTxBuildWithdrawal";
 import { ICliTxBuildOut, valueToString } from "./interfaces/ITxBuildOutput";
 import { waitForFileExists } from "../../../utils/waitForFileExists";
-import { CborString } from "@harmoniclabs/plu-ts/dist/cbor/CborString";
 import { createHash } from "crypto";
 
 
